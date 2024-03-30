@@ -55,7 +55,7 @@ available_space () {
 }
 
 function calc_size () {
-  local requestedsize="$1"
+  local requestedsize="${!1}"
   local availablesize
   availablesize="$(available_space)"
   if [ "$availablesize" -lt 0 ]
@@ -65,11 +65,27 @@ function calc_size () {
   fi
   if is_percent "$requestedsize"
   then
-    local percent=${requestedsize//%/}
-    requestedsize="$(( availablesize * percent / 100 ))"
-  else
-    requestedsize="$(( $(dehumanize $requestedsize) / 1024 ))"
+    case ${1} in
+      CAM_SIZE)
+        requestedsize=30G
+        ;;
+      MUSIC_SIZE)
+        requestedsize=4G
+        ;;
+      BOOMBOX_SIZE)
+        requestedsize=100M
+        ;;
+      LIGHTSHOW_SIZE)
+        requestedsize=1G
+        ;;
+      *)
+        log_progress "Percentage-based size no longer supported, use fixed size instead." > /dev/stderr
+        exit 1
+        ;;
+    esac
+    log_progress "Percentage-based size no longer supported, using default size of $requestedsize for $1" > /dev/stderr
   fi
+  requestedsize="$(( $(dehumanize $requestedsize) / 1024 ))"
   if [ "$requestedsize" -gt "$availablesize" ]
   then
     requestedsize="$availablesize"
@@ -136,7 +152,7 @@ LIGHTSHOW_DISK_FILE_NAME="$BACKINGFILES_MOUNTPOINT/lightshow_disk.bin"
 BOOMBOX_DISK_FILE_NAME="$BACKINGFILES_MOUNTPOINT/boombox_disk.bin"
 
 # delete existing files, because fallocate doesn't shrink files, and
-# because they interfere with the percentage-of-free-space calculation
+# because they interfere with the free-space calculation
 if [ -e "$CAM_DISK_FILE_NAME" ] || [ -e "$MUSIC_DISK_FILE_NAME" ] || [ -e "$LIGHTSHOW_DISK_FILE_NAME" ] || [ -e "$BOOMBOX_DISK_FILE_NAME" ] || [ -e "$BACKINGFILES_MOUNTPOINT/snapshots" ]
 then
   if [ -t 0 ]
@@ -196,20 +212,24 @@ then
   apt-get -y --force-yes install dosfstools
 fi
 
-CAM_DISK_SIZE="$(calc_size "$CAM_SIZE")"
-MUSIC_DISK_SIZE="$(calc_size "$MUSIC_SIZE")"
-LIGHTSHOW_DISK_SIZE="$(calc_size "$LIGHTSHOW_SIZE")"
-BOOMBOX_DISK_SIZE="$(calc_size "$BOOMBOX_SIZE")"
+CAM_DISK_SIZE="$(calc_size CAM_SIZE)"
+MUSIC_DISK_SIZE="$(calc_size MUSIC_SIZE)"
+LIGHTSHOW_DISK_SIZE="$(calc_size LIGHTSHOW_SIZE)"
+BOOMBOX_DISK_SIZE="$(calc_size BOOMBOX_SIZE)"
+
+if [ "$((CAM_DISK_SIZE+MUSIC_DISK_SIZE+LIGHTSHOW_DISK_SIZE+BOOMBOX_DISK_SIZE))" -gt "$(available_space)" ]
+then
+  echo "Total requested size exceeds available space"
+  # TODO: reduce sizes to fit
+  exit 1
+fi
 
 add_drive "cam" "CAM" "$CAM_DISK_SIZE" "$CAM_DISK_FILE_NAME" "$USE_EXFAT"
 log_progress "created camera backing file"
 
 REMAINING_SPACE="$(available_space)"
 
-if [ "$CAM_SIZE" = "100%" ]
-then
-  MUSIC_DISK_SIZE=0
-elif [ "$MUSIC_DISK_SIZE" -gt "$REMAINING_SPACE" ]
+if [ "$MUSIC_DISK_SIZE" -gt "$REMAINING_SPACE" ]
 then
   MUSIC_DISK_SIZE="$REMAINING_SPACE"
 fi

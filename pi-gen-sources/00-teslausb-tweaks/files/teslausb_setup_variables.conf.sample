@@ -73,21 +73,12 @@ export SHARE_PASSWORD='password'
 # Notes on sd card and image sizes:
 #   * A 128 GB or larger sd card (or USB drive, when using Pi4) is recommended.
 #     The minimum supported size is 64 GB.
-#   * When specifying sizes for the recordings and music drives, you can use
-#     specific sizes (e.g. 24G) or use sizes relative to the available space
-#     (e.g. 10%). It is recommended to use specific sizes.
-#   * The setup script will reserve a fixed 6 GB of space regardless of sd card
-#     size.
-#   * CAM_SIZE should generally be somewhat small, around 16G to 32G, unless you
+#   * The setup script will keep a fixed 6 GB of space in reserve regardless of
+#     sd card size.
+#   * CAM_SIZE should generally be somewhat small, 30G is recommended, unless you
 #     plan on accumulating a lot of footage between archive operations, in which
 #     case you should increase the value (an hour of recordings, or 6 Sentry
 #     events, is about 7-9 GB of data).
-#   * As of Tesla software version 2020.48.10, the car will warn when the
-#     recording drive is smaller than 32 GB, but smaller values will still work.
-#     Tesla appears to use power-of-ten based sizes, presumably because most
-#     storage manufacturers do too.
-#     Because teslausb uses power-of-two sizes, you can specify "30G" for the
-#     size and not get the warning.
 #   * MUSIC_SIZE should be large enough to hold your music library, obviously.
 #   * If no music size is specified, no music drive will be created.
 #   * If no lightshow size is specified, no lightshow drive will be created.
