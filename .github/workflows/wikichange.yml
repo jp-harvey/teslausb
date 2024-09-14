@@ -1,0 +1,14 @@
+name: wiki change webhook
+
+on: [repository_dispatch]
+
+jobs:
+  build:
+    env:
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: wiki change handler
+      shell: bash
+      run: |
+        curl -H "Content-Type: application/json" -d '{"username": "'wiki'", "content": "'changed'"}' "https://discord.com/api/webhooks/$DISCORD_TOKEN"
