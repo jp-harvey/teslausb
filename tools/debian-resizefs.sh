@@ -32,7 +32,7 @@ case "$1" in
 esac
 
 . /usr/share/initramfs-tools/hook-functions
-copy_exec /sbin/findfs /sbin/findfs-full
+copy_exec $(readlink -f /sbin/findfs) /sbin/findfs-full
 copy_exec /sbin/e2fsck /sbin
 copy_exec /sbin/resize2fs /sbin
 EOF
@@ -84,7 +84,7 @@ EOF
 chmod +x /etc/initramfs-tools/scripts/init-premount/resize
 
 # Regenerate initrd
-update-initramfs -v -u
+update-initramfs -v -u -k "$(uname -r)"
 
 # Remove files
 rm -f /etc/initramfs-tools/hooks/resize2fs /etc/initramfs-tools/scripts/init-premount/resize
